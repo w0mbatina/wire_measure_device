@@ -1,0 +1,1 @@
+v0.1.0: first numbered version. Combined ads handling, rudimentary menu system and screen into a stable and working protoype. Can only measure voltage drop on pins, no power supply yet. 
