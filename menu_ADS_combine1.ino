@@ -5,15 +5,16 @@
 #include "menu_behaviour.h"
 #include "ads.h"
 #include "meta.h"
+#include "rotary_encoder.h"
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+uint8_t dt = 32;  //definirani pini za encoder
+uint8_t clk = 33;
+uint8_t rotary_switch = 25;
 
-uint8_t buttonL = 32;  //pač definirani pini za gumbe
-uint8_t buttonM = 33;
-uint8_t buttonR = 25;
-uint8_t buttonOK = 26;
+uint8_t buttonOK = 26;  //definiran pin za OK button
 
-
+LiquidCrystal_I2C lcd(0x27, 16, 2);  //definiran LCD display
+RotaryEncoder encoder(clk, dt, RotaryEncoder::LatchMode::FOUR3);  //definiran rotary encoder za kontrolo
 
 void lcd_printMenu() {
   if (!subMenu) {
@@ -47,9 +48,9 @@ void lcd_printSettings() {
 
 void setup() {
 
-  pinMode(buttonL, INPUT_PULLUP);
-  pinMode(buttonM, INPUT_PULLUP);
-  pinMode(buttonR, INPUT_PULLUP);
+  //pinMode(clk, INPUT_PULLUP); clk in dt ni treba definirat za rotary encoder, ker to naredi library sam
+  pinMode(rotary_switch, INPUT_PULLUP);
+  //pinMode(dt, INPUT_PULLUP);
   pinMode(buttonOK, INPUT_PULLUP);
 
   Serial.begin(115200);
@@ -67,8 +68,10 @@ void setup() {
 
 void loop() {
 
+  int smer = encoder_direction();
+
   if (!menuOpen) {  //obnašanje gumbov v primeru, da meniji niso odprti. Definirati je treba še za gumb za merjenje
-    if (buttonPress(buttonR) || buttonPress(buttonL)) {
+    if (smer != 0) {
       menuOpen = true;
       subMenu = false;
       mainIndex = 0;
@@ -77,7 +80,7 @@ void loop() {
       return;
     }
 
-    if (buttonPress(buttonM)) {
+    if (buttonPress(rotary_switch)) {
       lcd_printSettings();
       return;
     }
@@ -121,21 +124,21 @@ void loop() {
 
   else {             //obnašanje gumbov, če je meni odprt
     if (!subMenu) {  //tukaj je meni odprt, submenu pa še niso odprti, zato skrolamo direkt samo po glavnih menijih
-      if (buttonPress(buttonR)) {
+      if (smer == 1) {
         mainIndex = indexNext(mainIndex, menuNo);
         subIndex = selectionFinder(mainIndex);
         lcd_printMenu();
         return;
       }
 
-      if (buttonPress(buttonL)) {
+      if (smer == -1) {
         mainIndex = indexPrevious(mainIndex, menuNo);
         subIndex = selectionFinder(mainIndex);
         lcd_printMenu();
         return;
       }
 
-      if (buttonPress(buttonM)) {
+      if (buttonPress(rotary_switch)) {
         subMenu = true;
         subIndex = selectionFinder(mainIndex);
         lcd_printMenu();
@@ -150,19 +153,19 @@ void loop() {
     }
 
     else {  //tukaj pa nato skrolamo znotraj submenijev
-      if (buttonPress(buttonR)) {
+      if (smer == 1) {
         subIndex = indexNext(subIndex, menus[mainIndex].optionCount);
         lcd_printMenu();
         return;
       }
 
-      if (buttonPress(buttonL)) {
+      if (smer == -1) {
         subIndex = indexPrevious(subIndex, menus[mainIndex].optionCount);
         lcd_printMenu();
         return;
       }
 
-      if (buttonPress(buttonM)) {
+      if (buttonPress(rotary_switch)) {
         menuOpen = false;
         subMenu = false;
         *menus[mainIndex].setValue = menus[mainIndex].values[subIndex];  //// * dereferencira pointer: grem na naslov, ki je shranjen v setValue, in v dejansko spremenljivko zapišem izbrano vrednost
