@@ -17,9 +17,13 @@ extern String menuMultiplexOptions[];
 extern int menuMultiplexValues[];
 extern int menuMultiplexSetValue;
 
-extern String menuFsrOptions[];
-extern int menuFsrValues[];
-extern int menuFsrSetValue;
+extern String menuFsrWireOptions[];
+extern int menuFsrWireValues[];
+extern int menuFsrWireSetValue;
+
+extern String menuFsrSenseOptions[];
+extern int menuFsrSenseValues[];
+extern int menuFsrSenseSetValue;
 
 extern String menuModeOptions[];
 extern int menuModeValues[];
@@ -30,5 +34,8 @@ extern int menuDataRateValues[];
 extern int menuDataRateSetValue;
 
 extern Menu menus[];
+
+extern int menuMeasureOptionsSetValue;  //iz menija za izbiro merjenja upornosti ali dolzine, externam jo ven zato da jo main.ini lahko vidi
+extern int menuWireMetricSetValue; //katera debelina zice je izbrana
 
 #endif

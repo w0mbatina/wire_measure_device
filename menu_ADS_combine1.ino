@@ -6,6 +6,7 @@
 #include "ads.h"
 #include "meta.h"
 #include "rotary_encoder.h"
+#include "wire_math.h"
 
 uint8_t dt = 32;  //definirani pini za encoder
 uint8_t clk = 33;
@@ -13,7 +14,7 @@ uint8_t rotary_switch = 25;
 
 uint8_t buttonOK = 26;  //definiran pin za OK button
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);  //definiran LCD display
+LiquidCrystal_I2C lcd(0x27, 16, 2);                               //definiran LCD display
 RotaryEncoder encoder(clk, dt, RotaryEncoder::LatchMode::FOUR3);  //definiran rotary encoder za kontrolo
 
 void lcd_printMenu() {
@@ -36,13 +37,13 @@ void lcd_printMenu() {
 
 void lcd_printSettings() {
   lcd.clear();
-  lcd.print(menus[0].options[selectionFinder(0)]);
+  lcd.print(menus[0].options[selectionFinder(0)]);  // menus[4].options izbere seznam opcij menija 4 (Data rate) selectionFinder(4) poišče indeks trenutno izbrane opcije v istem meniju. Obe številki morata biti enaki, sicer iščemo izbrano opcijo v napačnem meniju in jo uporabimo za prikaz opcije iz menija 4.
   lcd.print("  ");
-  lcd.print(menus[3].options[selectionFinder(3)]);
-  lcd.setCursor(0,1);
   lcd.print(menus[1].options[selectionFinder(1)]);
+  lcd.setCursor(0, 1);
+  lcd.print(menus[3].options[selectionFinder(3)]);
   lcd.print("  ");
-  lcd.print(menus[2].options[selectionFinder(2)]);
+  lcd.print(menus[4].options[selectionFinder(4)]);
 }
 
 
@@ -61,7 +62,7 @@ void setup() {
 
   lcd.setCursor(0, 0);
   lcd.print(DEVICE_NAME);
-  lcd.setCursor(0,1);
+  lcd.setCursor(0, 1);
   lcd.print("FW: ");
   lcd.print(FIRMWARE_VERSION);
 }
@@ -86,39 +87,35 @@ void loop() {
     }
 
     if (buttonPress(buttonOK)) {
-      if (!ads_config(
-            menuMultiplexSetValue,
-            menuFsrSetValue,
-            menuModeSetValue,
-            menuDataRateSetValue)) {  //kliče config funkcijo za single shot meritev in preveri glede na returnan boolean če je sploh uspelo. Če ni uspelo, prekine loop() in se vrne na začetek
 
-        delay(1000);
+      if (menuMeasureOptionsSetValue == 0) {
+        ADS_doubleResult voltages = ads_doubleRead(menuFsrWireSetValue, menuFsrSenseSetValue, menuModeSetValue, menuDataRateSetValue);  //ta struct je definiran v ads.h
+
+        float voltage_1 = voltages.A0_A1;  //takole se kliče vrednosti iz structa
+        float voltage_2 = voltages.A2_A3;
+
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print("ads_config error");
-
-        return;
+        lcd.print("A0_A1: ");
+        lcd.print(voltage_1, 6);
+        lcd.setCursor(0, 1);
+        lcd.print("A2_A3: ");
+        lcd.print(voltage_2, 6);
       }
-      if (!ads_selectRegister(conversion_register)) {  //kliče config funkcijo za adress register naslov in preveri glede na returnan boolean če je sploh uspelo. Če ni uspelo, prekine loop() in se vrne na začetek
-        delay(1000);
+      else {
+        int dolzina = wire_averageLength(menuWireMetricSetValue);
+
+        //float current_zatest = sense_current(sense_voltage) * 1000;
+
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print("select register error");
-
-        return;
+        lcd.print("Dolzina zice [m]");
+        lcd.setCursor(0, 1);
+        lcd.print(dolzina);
+        lcd.print("m  ");
+        //lcd.print(current_zatest);
+        //lcd.print("mA");
       }
-
-      float voltage = ads_readResult();
-
-      if (!isnan(voltage)) {
-        Serial.println(voltage, 6);
-      }
-
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Voltage: ");
-      lcd.setCursor(0, 1);
-      lcd.print(voltage, 6);
     }
   }
 
@@ -148,7 +145,6 @@ void loop() {
       if (buttonPress(buttonOK)) {
         menuOpen = false;
         lcd_printSettings();
-
       }
     }
 

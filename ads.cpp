@@ -125,3 +125,36 @@ float ads_readResult() {
 
   return final_value;
 }
+
+ADS_doubleResult ads_doubleRead(
+  //uint8_t selected_multiplex,  //deklarirane spremenljivke, ki jih rabim za uporabo te funkcije, to so zgornje konstante za config, multiplex imam definiran znotraj te spremenljivke, zato da ga naredim dvakrat
+  uint8_t selected_wire_fsr,
+  uint8_t selected_sense_fsr,
+  uint8_t selected_op_mode,
+  uint8_t selected_data_rate) {
+  
+  uint8_t multiplexA0_A1 = 0b000;
+  uint8_t multiplexA2_A3 = 0b011;
+
+  ads_config(
+    multiplexA0_A1,
+    selected_wire_fsr,
+    selected_op_mode,
+    selected_data_rate);
+
+  ads_selectRegister(conversion_register);
+  
+  float A0_A1 = ads_readResult();
+
+  ads_config(
+    multiplexA2_A3,
+    selected_sense_fsr,
+    selected_op_mode,
+    selected_data_rate);
+
+  ads_selectRegister(conversion_register);
+
+  float A2_A3 = ads_readResult();
+
+  return {A0_A1, A2_A3};
+}

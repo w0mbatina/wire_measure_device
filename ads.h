@@ -10,6 +10,11 @@ const uint8_t config_register = 0b01;
 const uint8_t Lo_thresh_register = 0b10;
 const uint8_t Hi_thresh_register = 0b11;
 
+struct ADS_doubleResult {
+  float A0_A1;
+  float A2_A3;
+};
+
 
 bool ads_config(
   uint8_t selected_multiplex,  //deklarirane spremenljivke, ki jih rabim za uporabo te funkcije, to so zgornje konstante za config
@@ -20,6 +25,12 @@ bool ads_config(
 bool ads_selectRegister(uint8_t register_address);
 
 float ads_readResult();
+
+ADS_doubleResult ads_doubleRead(
+  uint8_t selected_wire_fsr,
+  uint8_t selected_sense_fsr,
+  uint8_t selected_op_mode,
+  uint8_t selected_data_rate);
 
 
 #endif
