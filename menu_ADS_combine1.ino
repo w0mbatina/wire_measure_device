@@ -7,6 +7,7 @@
 #include "meta.h"
 #include "rotary_encoder.h"
 #include "wire_math.h"
+#include "temp_sensor.h"
 
 uint8_t dt = 32;  //definirani pini za encoder
 uint8_t clk = 33;
@@ -109,7 +110,9 @@ void loop() {
 
         lcd.clear();
         lcd.setCursor(0, 0);
-        lcd.print("Dolzina zice [m]");
+        lcd.print("Temperatura ");
+        lcd.print(temp_read());
+        lcd.print("°C");
         lcd.setCursor(0, 1);
         lcd.print(dolzina);
         lcd.print("m  ");
